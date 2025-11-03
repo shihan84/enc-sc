@@ -1,141 +1,88 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# SCTE35 Stream Encoder
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+A professional 1U rack-style encoder interface for inserting SCTE35 markers into SRT streams using TSDuck.
 
-## ✨ Technology Stack
+## Features
 
-This scaffold provides a robust foundation built with:
+### 🎥 Stream Configuration
+- **Input/Output SRT Streams**: Configure source and destination SRT URLs
+- **Codec Support**: H.264, H.265, MPEG-2
+- **Resolution Options**: 1080p, 720p, 4K
+- **Bitrate Control**: Adjustable bitrate settings
+- **Frame Rate**: 30/60/25 FPS support
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### ⚡ SCTE35 Marker Management
+- **Splice Types**: Program start/end, commercial start/end, provider ads
+- **Pre-roll Configuration**: Adjustable pre-roll timing (0-30 seconds)
+- **Auto Insert**: Automatic marker insertion capability
+- **Manual Insert**: On-demand marker insertion
+- **Real-time Monitoring**: Track marker insertion status
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 📊 Professional Monitoring
+- **Stream Status**: Real-time input/output connection monitoring
+- **Performance Metrics**: Bitrate, packet count, error tracking
+- **SCTE35 Statistics**: Marker count and last insertion tracking
+- **System Monitoring**: CPU, memory, temperature, uptime
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### 🎛️ 1U Rack Design
+- **Professional Interface**: Authentic rack-mount encoder appearance
+- **Tabbed Navigation**: Stream config, SCTE35 markers, monitoring
+- **Settings Panel**: Advanced configuration dropdown
+- **Status Indicators**: Visual feedback for all operations
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+## Technical Stack
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+- **Frontend**: Next.js 15 with TypeScript
+- **UI Components**: shadcn/ui with Tailwind CSS
+- **Backend**: Next.js API routes
+- **Streaming**: TSDuck integration (simulated)
+- **Real-time Updates**: Status polling every 2 seconds
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+## API Endpoints
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+### Stream Control
+- `POST /api/stream/start` - Start encoding process
+- `POST /api/stream/stop` - Stop encoding process
+- `GET /api/status` - Get current stream status
 
-## 🎯 Why This Scaffold?
+### SCTE35 Operations
+- `POST /api/scte35/insert` - Insert SCTE35 marker
 
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+## Usage
 
-## 🚀 Quick Start
+1. **Configure Streams**: Set input and output SRT URLs
+2. **Adjust Settings**: Configure bitrate, resolution, codec
+3. **Setup SCTE35**: Choose splice type and pre-roll timing
+4. **Start Encoding**: Begin the streaming process
+5. **Insert Markers**: Use manual or automatic SCTE35 insertion
+6. **Monitor**: Track performance in the monitoring tab
+
+## Configuration Options
+
+### Advanced Settings
+- Buffer size adjustment
+- Latency configuration
+- Bandwidth limiting
+- SCTE35 PID settings
+- Table ID configuration
+- PTS offset control
+
+## Note
+
+This is a demonstration interface that simulates TSDuck functionality. In a production environment, you would need to:
+
+1. Install TSDuck on the server
+2. Configure actual SRT stream endpoints
+3. Implement proper process management for TSDuck commands
+4. Add authentication and security measures
+5. Implement proper error handling and logging
+
+## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+npm run dev    # Start development server
+npm run lint   # Check code quality
+npm run build  # Build for production
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
-
-## 🤖 Powered by Z.ai
-
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
-
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
-
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
-
-## 📁 Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
-```
-
-## 🎨 Available Features & Components
-
-This scaffold includes a comprehensive set of modern web development tools:
-
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
-
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
-
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
-
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
-
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
-
-## 🤝 Get Started with Z.ai
-
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
-
----
-
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+The application runs on port 3000 and provides a professional encoder interface suitable for broadcast environments.
