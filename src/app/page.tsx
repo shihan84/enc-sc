@@ -32,9 +32,12 @@ export default function SCTE35Encoder() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   
   // Stream Configuration
-  const [streamName, setStreamName] = useState('Service_Name')
-  const [inputUrl, setInputUrl] = useState('srt://localhost:1234')
-  const [outputUrl, setOutputUrl] = useState('srt://localhost:1235')
+  const [streamName, setStreamName] = useState('SCTE-35 Stream')
+  const [serviceName, setServiceName] = useState('SCTE-35 Stream')
+  const [provider, setProvider] = useState('ITAssist')
+  const [serviceId, setServiceId] = useState(1)
+  const [inputUrl, setInputUrl] = useState('https://cdn.itassist.one/BREAKING/NEWS/index.m3u8')
+  const [outputUrl, setOutputUrl] = useState('srt://cdn.itassist.one:8888')
   
   // Video Specifications (Distributor Requirements)
   const [videoResolution] = useState('1920x1080')
@@ -54,12 +57,12 @@ export default function SCTE35Encoder() {
   const [audioSamplingRate] = useState('48000') // 48 Khz
   
   // SCTE35 Configuration
-  const [preRollSeconds, setPreRollSeconds] = useState('0') // 0-10 seconds
+  const [preRollSeconds, setPreRollSeconds] = useState('2') // 0-10 seconds
   const [spliceType, setSpliceType] = useState('CUE-OUT')
   const [autoInsert, setAutoInsert] = useState(true)
   const [adDuration, setAdDuration] = useState('600') // Ad duration in seconds
-  const [scteEventId, setScteEventId] = useState('100023') // Sequential Event ID
-  const [lastEventId, setLastEventId] = useState('100023')
+  const [scteEventId, setScteEventId] = useState('10023') // Sequential Event ID
+  const [lastEventId, setLastEventId] = useState('10023')
   
   // PID Configuration
   const [scteDataPid] = useState('500')
@@ -141,6 +144,10 @@ export default function SCTE35Encoder() {
           streamName,
           inputUrl,
           outputUrl,
+          // Service Configuration
+          serviceName,
+          provider,
+          serviceId,
           // Video Specifications
           videoResolution,
           videoCodec,
@@ -166,8 +173,8 @@ export default function SCTE35Encoder() {
       if (response.ok) {
         const data = await response.json()
         setStreamId(data.streamId)
-        setStreamPid(data.pid)
         setStreamStatus('active')
+        console.log('TSDuck Command:', data.command)
       } else {
         setStreamStatus('error')
         setIsEncoding(false)
@@ -209,7 +216,7 @@ export default function SCTE35Encoder() {
       setScteEventId(newEventId)
       setLastEventId(newEventId)
       
-      const response = await fetch('/api/scte35/insert', {
+      const response = await fetch('/api/scte35/inject', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -223,15 +230,22 @@ export default function SCTE35Encoder() {
           scteEventId: newEventId,
           scteDataPid: parseInt(scteDataPid),
           nullPid: parseInt(nullPid),
-          latency: parseInt(latency)
+          latency: parseInt(latency),
+          // Service Configuration
+          serviceName,
+          provider,
+          serviceId
         })
       })
       
       if (response.ok) {
-        console.log('SCTE35 marker inserted successfully')
+        const data = await response.json()
+        console.log('SCTE35 marker injected successfully')
+        console.log('TSDuck Command:', data.command)
+        console.log('XML File:', data.xmlFile)
       }
     } catch (error) {
-      console.error('Failed to insert SCTE35 marker:', error)
+      console.error('Failed to inject SCTE35 marker:', error)
     }
   }
 
@@ -304,27 +318,58 @@ export default function SCTE35Encoder() {
                           value={streamName}
                           onChange={(e) => setStreamName(e.target.value)}
                           className="bg-gray-800 border-gray-600 text-white mt-1"
-                          placeholder="Service_Name"
+                          placeholder="SCTE-35 Stream"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="input-url" className="text-sm text-gray-300">Input URL</Label>
+                        <Label htmlFor="service-name" className="text-sm text-gray-300">Service Name</Label>
+                        <Input
+                          id="service-name"
+                          value={serviceName}
+                          onChange={(e) => setServiceName(e.target.value)}
+                          className="bg-gray-800 border-gray-600 text-white mt-1"
+                          placeholder="SCTE-35 Stream"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="provider" className="text-sm text-gray-300">Provider</Label>
+                        <Input
+                          id="provider"
+                          value={provider}
+                          onChange={(e) => setProvider(e.target.value)}
+                          className="bg-gray-800 border-gray-600 text-white mt-1"
+                          placeholder="ITAssist"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="service-id" className="text-sm text-gray-300">Service ID</Label>
+                        <Input
+                          id="service-id"
+                          type="number"
+                          value={serviceId}
+                          onChange={(e) => setServiceId(parseInt(e.target.value))}
+                          className="bg-gray-800 border-gray-600 text-white mt-1"
+                          placeholder="1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="input-url" className="text-sm text-gray-300">Input URL (HLS/SRT)</Label>
                         <Input
                           id="input-url"
                           value={inputUrl}
                           onChange={(e) => setInputUrl(e.target.value)}
                           className="bg-gray-800 border-gray-600 text-white mt-1"
-                          placeholder="srt://host:port"
+                          placeholder="https://cdn.itassist.one/BREAKING/NEWS/index.m3u8"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="output-url" className="text-sm text-gray-300">Output URL</Label>
+                        <Label htmlFor="output-url" className="text-sm text-gray-300">Output URL (SRT)</Label>
                         <Input
                           id="output-url"
                           value={outputUrl}
                           onChange={(e) => setOutputUrl(e.target.value)}
                           className="bg-gray-800 border-gray-600 text-white mt-1"
-                          placeholder="srt://host:port"
+                          placeholder="srt://cdn.itassist.one:8888"
                         />
                       </div>
                       <div>
@@ -495,6 +540,15 @@ export default function SCTE35Encoder() {
                           />
                         </div>
                       </div>
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <h4 className="text-sm font-semibold text-green-400 mb-2">TSDuck Configuration</h4>
+                        <div className="text-xs space-y-1">
+                          <p><span className="text-gray-400">PID Remap:</span> 211→256, 221→257</p>
+                          <p><span className="text-gray-400">Video PID:</span> 256 (0x1b)</p>
+                          <p><span className="text-gray-400">Audio PID:</span> 257 (0x0f)</p>
+                          <p><span className="text-gray-400">SCTE35 PID:</span> {scteDataPid} (0x86)</p>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -619,8 +673,17 @@ export default function SCTE35Encoder() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="bg-gray-800 p-4 rounded-lg space-y-2">
-                        <h4 className="text-sm font-semibold text-green-400">Expected Values:</h4>
-                        <div className="text-xs space-y-1">
+                        <h4 className="text-sm font-semibold text-green-400">TSDuck spliceinject Command</h4>
+                        <div className="text-xs space-y-1 font-mono bg-gray-900 p-2 rounded">
+                          <p>tsp -I srt {inputUrl}</p>
+                          <p>-P spliceinject --pid {scteDataPid}</p>
+                          <p>--pts-pid 256 --files preroll_{scteEventId}_*.xml</p>
+                          <p>--inject-count 1 --inject-interval 1000</p>
+                          <p>--start-delay {preRollSeconds}000</p>
+                          <p>-O srt --caller cdn.itassist.one:8888</p>
+                          <p>--latency {latency} --streamid #!::r=scte/scte,m=publish</p>
+                        </div>
+                        <div className="text-xs space-y-1 pt-2 border-t border-gray-700">
                           <p><span className="text-gray-400">Ad Duration:</span> <span className="text-white">{adDuration}s</span></p>
                           <p><span className="text-gray-400">Event ID:</span> <span className="text-white">{scteEventId}</span> (Sequential)</p>
                           <p><span className="text-gray-400">CUE-OUT:</span> <span className="text-white">Program Out Point</span></p>

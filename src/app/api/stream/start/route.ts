@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 interface StreamStartRequest {
   streamName: string
   inputUrl: string
   outputUrl: string
+  // Service Configuration
+  serviceName: string
+  provider: string
+  serviceId: number
   // Video Specifications
   videoResolution: string
   videoCodec: string
@@ -30,6 +38,7 @@ interface StreamStartResponse {
   message: string
   streamId?: string
   pid?: number
+  command?: string
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<StreamStartResponse>> {
@@ -45,27 +54,46 @@ export async function POST(request: NextRequest): Promise<NextResponse<StreamSta
     }
 
     // Generate stream ID
-    const streamId = `${body.streamName}_${Date.now()}`
-    const pid = Math.floor(Math.random() * 9000) + 1000
+    const streamId = `${body.serviceName}_${Date.now()}`
     
-    // Build TSDuck command with distributor specifications
-    const tsduckCommand = buildDistributorTSDuckCommand(body, streamId, pid)
+    // Build real TSDuck command based on your specification
+    const tsduckCommand = buildRealTSDuckCommand(body, streamId)
     
-    // Execute TSDuck command (simulated for now)
-    console.log('Starting stream with distributor specs:', tsduckCommand)
+    console.log('Starting stream with real TSDuck command:', tsduckCommand)
     
-    // In a real implementation, you would execute:
-    // tsp --input ${body.inputUrl} --output ${body.outputUrl} ...
-    
-    // Simulate stream startup
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Stream started successfully with distributor specifications',
-      streamId,
-      pid
-    })
+    try {
+      // Execute TSDuck command
+      const { stdout, stderr } = await execAsync(tsduckCommand)
+      
+      console.log('TSDuck stdout:', stdout)
+      if (stderr) {
+        console.log('TSDuck stderr:', stderr)
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Stream started successfully with TSDuck',
+        streamId,
+        command: tsduckCommand
+      })
+      
+    } catch (execError: any) {
+      console.error('TSDuck execution error:', execError)
+      
+      // Check if TSDuck is not installed
+      if (execError.code === 127) {
+        return NextResponse.json({
+          success: false,
+          message: 'TSDuck is not installed. Please install TSDuck to use real streaming functionality.'
+        }, { status: 500 })
+      }
+      
+      return NextResponse.json({
+        success: false,
+        message: `TSDuck execution failed: ${execError.message}`,
+        command: tsduckCommand
+      }, { status: 500 })
+    }
 
   } catch (error) {
     console.error('Stream start error:', error)
@@ -76,32 +104,37 @@ export async function POST(request: NextRequest): Promise<NextResponse<StreamSta
   }
 }
 
-function buildDistributorTSDuckCommand(config: StreamStartRequest, streamId: string, pid: number): string {
+function buildRealTSDuckCommand(config: StreamStartRequest, streamId: string): string {
+  // Parse input URL to determine input type
+  const isHLS = config.inputUrl.includes('.m3u8')
+  const inputType = isHLS ? 'hls' : 'srt'
+  
+  // Parse output URL for SRT configuration
+  const outputMatch = config.outputUrl.match(/srt:\/\/([^:]+):(\d+)/)
+  const outputHost = outputMatch ? outputMatch[1] : 'cdn.itassist.one'
+  const outputPort = outputMatch ? outputMatch[2] : '8888'
+  
   const tsduckCmd = [
     'tsp',
-    `--input ${config.inputUrl}`,
-    `--output ${config.outputUrl}`,
-    `--stream-id ${streamId}`,
-    `--pid ${pid}`,
-    // Video specifications
-    `--video-codec ${config.videoCodec}`,
-    `--video-bitrate ${config.videoBitrate}000`,
-    `--resolution ${config.videoResolution}`,
-    `--gop ${config.gop}`,
-    `--b-frames ${config.bFrames}`,
-    `--profile ${config.profileLevel}`,
-    `--chroma ${config.chroma}`,
-    `--aspect-ratio ${config.aspectRatio}`,
-    `--pcr ${config.pcr}`,
-    // Audio specifications
-    `--audio-codec ${config.audioCodec}`,
-    `--audio-bitrate ${config.audioBitrate}000`,
-    `--audio-lkfs ${config.audioLkfs}`,
-    `--audio-sampling-rate ${config.audioSamplingRate}`,
-    // PID configuration
-    `--scte-pid ${config.scteDataPid}`,
-    `--null-pid ${config.nullPid}`,
-    `--latency ${config.latency}`
+    `-I ${inputType} ${config.inputUrl}`,
+    // Service Descriptor Table
+    '-P sdt',
+    `--service ${config.serviceId}`,
+    `--name "${config.serviceName}"`,
+    `--provider "${config.provider}"`,
+    // PID remapping (as per your command)
+    '-P remap 211=256 221=257',
+    // PMT configuration
+    '-P pmt',
+    `--service ${config.serviceId}`,
+    '--add-pid 256/0x1b', // H.264 video
+    '--add-pid 257/0x0f', // AAC audio
+    `--add-pid ${config.scteDataPid}/0x86`, // SCTE35
+    // Output configuration
+    '-O srt',
+    `--caller ${outputHost}:${outputPort}`,
+    `--latency ${config.latency}`,
+    `--streamid #!::r=scte/scte,m=publish`
   ]
   
   return tsduckCmd.join(' ')
